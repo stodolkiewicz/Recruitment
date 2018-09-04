@@ -7,20 +7,45 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Transaction {
-
     private Long id;
     private LocalDate saleDate;
     private List<Product> products = new LinkedList<>();
 
     public Transaction() {}
 
-//    TODO:
-//    builder with required id and saleDate
-
     public Transaction(Long id, LocalDate saleDate, List<Product> products) {
         this.id = id;
         this.saleDate = saleDate;
         this.products = products;
+    }
+
+    public static class TransactionBuilder{
+        private Long id;
+        private LocalDate saleDate;
+        private List<Product> products = new LinkedList<>();
+
+        public TransactionBuilder(Long id){
+            this.id = id;
+        }
+
+        public TransactionBuilder setSaleDate(LocalDate saleDate){
+            this.saleDate = saleDate;
+            return this;
+        }
+
+        public TransactionBuilder setProducts(List<Product> products){
+            this.products = products;
+            return this;
+        }
+
+        public TransactionBuilder addProduct(Product product){
+            this.products.add(product);
+            return this;
+        }
+
+        public Transaction build(){
+            return new Transaction(id, saleDate, products);
+        }
     }
 
     @Override
