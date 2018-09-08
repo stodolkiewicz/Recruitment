@@ -67,7 +67,6 @@ public class Transaction {
     public String toString() {
         return "Transaction{" +
                 "id=" + id +
-                ", saleDate=" + saleDate +
                 ", products=" + products +
                 '}';
     }

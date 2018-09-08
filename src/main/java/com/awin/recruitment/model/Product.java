@@ -31,10 +31,7 @@ public class Product {
 
     @Override
     public String toString() {
-        return "Product{" +
-                "productName='" + productName + '\'' +
-                ", amountPaid=" + amountPaid +
-                '}';
+        return productName + " " + amountPaid;
     }
 
     public String getProductName() {
