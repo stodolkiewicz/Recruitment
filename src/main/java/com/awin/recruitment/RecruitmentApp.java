@@ -9,10 +9,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 
 public final class RecruitmentApp {
 
@@ -41,16 +38,37 @@ public final class RecruitmentApp {
                 .addProduct(new Product("prodcutName4", BigDecimal.ONE))
                 .build();
 
+        Transaction transaction3 = new Transaction.TransactionBuilder(3L)
+                .setSaleDate(LocalDate.of(2100, 1, 1))
+                .addProduct(new Product("prodcutName5", BigDecimal.TEN))
+                .addProduct(new Product("prodcutName6", BigDecimal.TEN))
+                .build();
+
+        Transaction transaction4 = new Transaction.TransactionBuilder(4L)
+                .setSaleDate(LocalDate.of(2100, 1, 1))
+                .addProduct(new Product("prodcutName7", BigDecimal.TEN))
+                .addProduct(new Product("prodcutName8", BigDecimal.valueOf(100L)))
+                .build();
+
         transactions.add(transaction1);
         transactions.add(transaction2);
+        transactions.add(transaction3);
+        transactions.add(transaction4);
 
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         executorService.submit(new TransactionProducer(transactions, transactionsWithTotalAmountPaid));
         executorService.submit(new TransactionProducer(transactions, transactionsWithTotalAmountPaid));
 
         executorService.shutdown();
+        try {
+            while (!executorService.awaitTermination(24L, TimeUnit.HOURS)) {
+                System.out.println("Not yet. Still waiting for termination");
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-        System.out.println(transactions);
+        System.out.println("\nResults after program finished: " + transactionsWithTotalAmountPaid);
 
 
     }

@@ -20,10 +20,9 @@ public class TransactionWithTotalAmountPaid extends Transaction{
 
     @Override
     public String toString() {
-        return "TransactionWithTotalAmountPaid{" +
-                "transaction=" + transaction +
-                ", totalAmountPaid=" + totalAmountPaid +
-                '}';
+        return
+                " tid: " + transaction.getId() +
+                " totalAmountPaid: " + totalAmountPaid + "\n";
     }
 
     public Transaction getTransaction() {
