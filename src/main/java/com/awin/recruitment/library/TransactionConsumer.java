@@ -37,7 +37,7 @@ public class TransactionConsumer implements Consumer<TransactionWithTotalAmountP
 
     @Override
     public void consume(Iterable<TransactionWithTotalAmountPaid> transactionsWithTotalAmountPaid) {
-        System.out.println("om nom nom! consuming! Saving to db.");
+        System.out.println("om nom nom! consumed transaction!   transaction Id:" + transactionsWithTotalAmountPaid.iterator().next().getTransaction().getId());
     }
 
     public BlockingQueue<TransactionWithTotalAmountPaid> getTransactionsWithTotalAmountPaid() {

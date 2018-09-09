@@ -64,8 +64,7 @@ public class TransactionProducer implements Producer<Transaction>, Runnable{
                 .map(this::createTransactionWithTotalAmountPaid)
                 .collect(Collectors.toList());
 
-        System.out.println("New transactions processed! " + getCurrentThreadName() + "\ntransaction ids: " + getTransactionsBatchIds() + "\n");
-        System.out.println("processed Transactions: " + processedTransactions);
+        System.out.println("New transactions processed! " + getCurrentThreadName() + "\n" + processedTransactions + "\n");
 
         transactionsWithTotalAmountPaid.addAll(processedTransactions);
     }
@@ -82,14 +81,6 @@ public class TransactionProducer implements Producer<Transaction>, Runnable{
     //debugging helper methods -------------------------------------------------
     private String getCurrentThreadName(){
         return Thread.currentThread().getName();
-    }
-
-    private String getTransactionsBatchIds(){
-        StringBuilder ids = new StringBuilder();
-        for(int i = 0; i < transactionsBatch.size(); i++){
-            ids.append(transactionsBatch.get(i).getId()).append(" ");
-        }
-        return ids.toString();
     }
 
     public BlockingQueue<TransactionWithTotalAmountPaid> getTransactionsWithTotalAmountPaid() {

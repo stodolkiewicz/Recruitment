@@ -70,6 +70,14 @@ public final class RecruitmentApp {
         transactions.add(transaction4);
         transactions.add(transaction5);
 
+        //Start consumers -------------------------------------------------------------------------
+        ExecutorService consumerExecutorService = Executors.newFixedThreadPool(numberOfProducers);
+        for(int i = 0; i < numberOfConsumers; i++){
+            consumerExecutorService.submit(new TransactionConsumer(transactionsWithTotalAmountPaid, totalAmountPaidPoisonValue));
+        }
+
+        consumerExecutorService.shutdown();
+
         //Start producers -------------------------------------------------------------------------
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfProducers);
         executorService.submit(new TransactionProducer(transactions, transactionsWithTotalAmountPaid,
@@ -89,13 +97,6 @@ public final class RecruitmentApp {
         System.out.println("\nResults after producers finished: " + transactionsWithTotalAmountPaid);
 
 
-        //Start consumers -------------------------------------------------------------------------
-        ExecutorService consumerExecutorService = Executors.newFixedThreadPool(numberOfProducers);
-        for(int i = 0; i < numberOfConsumers; i++){
-            consumerExecutorService.submit(new TransactionConsumer(transactionsWithTotalAmountPaid, totalAmountPaidPoisonValue));
-        }
-
-        consumerExecutorService.shutdown();
         try {
             while (!consumerExecutorService.awaitTermination(24L, TimeUnit.HOURS)) {
                 System.out.println("Not yet. Still waiting for termination");
