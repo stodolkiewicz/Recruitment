@@ -19,9 +19,14 @@ public class TransactionProducer implements Producer<Transaction>, Runnable{
     private static final int MAX_NUMBER_OF_TRANSACTIONS_TO_PROCESS_IN_BATCH = 2;
     List<Transaction> transactionsBatch = new LinkedList<>();
 
-    public TransactionProducer(BlockingQueue<Transaction> transactions, BlockingQueue<TransactionWithTotalAmountPaid> transactionsWithTotalAmountPaid ) {
+    private final BigDecimal totalAmountPaidPoisonValue;
+    private final int poisonPillsNumber;
+
+    public TransactionProducer(BlockingQueue<Transaction> transactions, BlockingQueue<TransactionWithTotalAmountPaid> transactionsWithTotalAmountPaid, BigDecimal totalAmountPaidPoisonValue, int poisonPillsNumber) {
         this.transactions = transactions;
         this.transactionsWithTotalAmountPaid = transactionsWithTotalAmountPaid;
+        this.totalAmountPaidPoisonValue = totalAmountPaidPoisonValue;
+        this.poisonPillsNumber = poisonPillsNumber;
     }
 
     @Override
@@ -36,13 +41,27 @@ public class TransactionProducer implements Producer<Transaction>, Runnable{
             produce(transactionsBatch);
             transactionsBatch.clear();
         }
+
+        //add poison Pill transaction
+        try {
+            for(int i = 0; i < poisonPillsNumber; i++){
+
+                Transaction poisonPillTransaction = new Transaction();
+                poisonPillTransaction.setId(-1L);
+
+                TransactionWithTotalAmountPaid poisonPill = new TransactionWithTotalAmountPaid(poisonPillTransaction, totalAmountPaidPoisonValue);
+                transactionsWithTotalAmountPaid.put(poisonPill);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void produce(Iterable<Transaction> transactions) {
 
         List<TransactionWithTotalAmountPaid> processedTransactions = StreamSupport.stream(transactions.spliterator(), true)
-                .map(transaction -> createTransactionWithTotalAmountPaid(transaction))
+                .map(this::createTransactionWithTotalAmountPaid)
                 .collect(Collectors.toList());
 
         System.out.println("New transactions processed! " + getCurrentThreadName() + "\ntransaction ids: " + getTransactionsBatchIds() + "\n");
@@ -66,11 +85,11 @@ public class TransactionProducer implements Producer<Transaction>, Runnable{
     }
 
     private String getTransactionsBatchIds(){
-        String ids = "";
+        StringBuilder ids = new StringBuilder();
         for(int i = 0; i < transactionsBatch.size(); i++){
-            ids += transactionsBatch.get(i).getId() + " ";
+            ids.append(transactionsBatch.get(i).getId()).append(" ");
         }
-        return ids;
+        return ids.toString();
     }
 
     public BlockingQueue<TransactionWithTotalAmountPaid> getTransactionsWithTotalAmountPaid() {

@@ -1,6 +1,7 @@
 package com.awin.recruitment;
 
 import com.awin.recruitment.infrastructure.spring.ClassPathXmlApplicationContextFactory;
+import com.awin.recruitment.library.TransactionConsumer;
 import com.awin.recruitment.library.TransactionProducer;
 import com.awin.recruitment.model.Product;
 import com.awin.recruitment.model.Transaction;
@@ -23,8 +24,14 @@ public final class RecruitmentApp {
 
         System.out.println("Recruitment app is running");
 
-        //TODO POISON PILL!
-        BlockingQueue<Transaction> transactions = new LinkedBlockingQueue<>();
+        int queueSize = 10;
+        BigDecimal totalAmountPaidPoisonValue = BigDecimal.valueOf(-1L);
+        int numberOfProducers = 2;
+        int numberOfConsumers = 5;
+        int poisonPillPerProducer = numberOfConsumers / numberOfProducers;
+        int numberOfAdditionalPoisonPillsForOneOfTheProducers = numberOfConsumers % numberOfProducers;
+
+        BlockingQueue<Transaction> transactions = new LinkedBlockingQueue<>(queueSize);
         BlockingQueue<TransactionWithTotalAmountPaid> transactionsWithTotalAmountPaid = new LinkedBlockingQueue<>();
 
         Transaction transaction1 = new Transaction.TransactionBuilder(1L)
@@ -63,9 +70,12 @@ public final class RecruitmentApp {
         transactions.add(transaction4);
         transactions.add(transaction5);
 
-        ExecutorService executorService = Executors.newFixedThreadPool(2);
-        executorService.submit(new TransactionProducer(transactions, transactionsWithTotalAmountPaid));
-        executorService.submit(new TransactionProducer(transactions, transactionsWithTotalAmountPaid));
+        //Start producers -------------------------------------------------------------------------
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfProducers);
+        executorService.submit(new TransactionProducer(transactions, transactionsWithTotalAmountPaid,
+                totalAmountPaidPoisonValue, poisonPillPerProducer));
+        executorService.submit(new TransactionProducer(transactions, transactionsWithTotalAmountPaid,
+                totalAmountPaidPoisonValue, poisonPillPerProducer + numberOfAdditionalPoisonPillsForOneOfTheProducers));
 
         executorService.shutdown();
         try {
@@ -76,8 +86,25 @@ public final class RecruitmentApp {
             e.printStackTrace();
         }
 
-        System.out.println("\nResults after program finished: " + transactionsWithTotalAmountPaid);
+        System.out.println("\nResults after producers finished: " + transactionsWithTotalAmountPaid);
 
+
+        //Start consumers -------------------------------------------------------------------------
+        ExecutorService consumerExecutorService = Executors.newFixedThreadPool(numberOfProducers);
+        for(int i = 0; i < numberOfConsumers; i++){
+            consumerExecutorService.submit(new TransactionConsumer(transactionsWithTotalAmountPaid, totalAmountPaidPoisonValue));
+        }
+
+        consumerExecutorService.shutdown();
+        try {
+            while (!consumerExecutorService.awaitTermination(24L, TimeUnit.HOURS)) {
+                System.out.println("Not yet. Still waiting for termination");
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("\nResults after consumers finished: " + transactionsWithTotalAmountPaid);
 
     }
 }
