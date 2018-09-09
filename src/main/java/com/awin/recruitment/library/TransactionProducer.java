@@ -26,13 +26,15 @@ public class TransactionProducer implements Producer<Transaction>, Runnable{
 
     @Override
     public void run() {
-        try {
+        while(transactions.size() != 0){
             for(int i = 0; i < MAX_NUMBER_OF_TRANSACTIONS_TO_PROCESS_IN_BATCH; i++){
-                transactionsBatch.add(transactions.take());
+                Transaction polledTransaction = transactions.poll();
+                if(polledTransaction != null){
+                    transactionsBatch.add(polledTransaction);
+                }
             }
             produce(transactionsBatch);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            transactionsBatch.clear();
         }
     }
 

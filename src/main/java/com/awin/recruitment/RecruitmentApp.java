@@ -23,6 +23,7 @@ public final class RecruitmentApp {
 
         System.out.println("Recruitment app is running");
 
+        //TODO POISON PILL!
         BlockingQueue<Transaction> transactions = new LinkedBlockingQueue<>();
         BlockingQueue<TransactionWithTotalAmountPaid> transactionsWithTotalAmountPaid = new LinkedBlockingQueue<>();
 
@@ -50,10 +51,17 @@ public final class RecruitmentApp {
                 .addProduct(new Product("prodcutName8", BigDecimal.valueOf(100L)))
                 .build();
 
+        Transaction transaction5 = new Transaction.TransactionBuilder(5L)
+                .setSaleDate(LocalDate.of(2100, 1, 1))
+                .addProduct(new Product("prodcutName9", BigDecimal.valueOf(100L)))
+                .addProduct(new Product("prodcutName10", BigDecimal.valueOf(100L)))
+                .build();
+
         transactions.add(transaction1);
         transactions.add(transaction2);
         transactions.add(transaction3);
         transactions.add(transaction4);
+        transactions.add(transaction5);
 
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         executorService.submit(new TransactionProducer(transactions, transactionsWithTotalAmountPaid));
